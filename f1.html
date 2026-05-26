@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/gh/UseNex/nex-js@069e80ceeba0985e86366783d2ff8616e54c0bcd/nex.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#fafaf9;
+  --bg2:#f4f4f2;
+  --line:rgba(0,0,0,0.08);
+  --line2:rgba(0,0,0,0.14);
+  --text:#111110;
+  --muted:#888883;
+  --muted2:#b0b0aa;
+  --hover:#f0f0ee;
+  --active:#e8e8e5;
+  --font-sans:'DM Sans',sans-serif;
+  --font-mono:'DM Mono',monospace;
+}
+
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#111110;
+    --bg2:#191918;
+    --line:rgba(255,255,255,0.07);
+    --line2:rgba(255,255,255,0.13);
+    --text:#ededec;
+    --muted:#6f6f6b;
+    --muted2:#444441;
+    --hover:#1c1c1b;
+    --active:#242422;
+  }
+}
+
+html,body{height:100%;overflow:hidden}
+
+body{
+  font-family:var(--font-sans);
+  background:var(--bg);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ── NAV ─────────────────────────────────────────── */
+nav{
+  height:44px;
+  min-height:44px;
+  display:flex;
+  align-items:center;
+  border-bottom:1px solid var(--line);
+  padding:0 14px;
+  gap:2px;
+  flex-shrink:0;
+}
+
+.nav-seg{
+  display:flex;
+  align-items:center;
+  gap:2px;
+}
+
+.nav-sep{
+  width:1px;
+  height:18px;
+  background:var(--line2);
+  margin:0 8px;
+}
+
+.nb{
+  background:none;
+  border:none;
+  color:var(--muted);
+  font-family:var(--font-sans);
+  font-size:13px;
+  font-weight:500;
+  padding:5px 10px;
+  border-radius:6px;
+  cursor:pointer;
+  transition:color .12s,background .12s;
+  white-space:nowrap;
+}
+.nb:hover{color:var(--text);background:var(--hover)}
+.nb.on{color:var(--text);background:var(--active)}
+
+.nav-search{
+  flex:1;
+  display:flex;
+  align-items:center;
+  max-width:320px;
+  position:relative;
+  margin-left:4px;
+}
+
+.nav-search svg{
+  position:absolute;
+  left:8px;
+  color:var(--muted2);
+  pointer-events:none;
+}
+
+.nav-search input{
+  width:100%;
+  height:30px;
+  padding:0 10px 0 30px;
+  background:var(--bg2);
+  border:1px solid var(--line2);
+  border-radius:6px;
+  color:var(--text);
+  font-family:var(--font-sans);
+  font-size:13px;
+  outline:none;
+  transition:border-color .12s;
+}
+.nav-search input::placeholder{color:var(--muted2)}
+.nav-search input:focus{border-color:var(--muted)}
+
+.nav-right{
+  margin-left:auto;
+  font-family:var(--font-mono);
+  font-size:11px;
+  color:var(--muted);
+}
+
+/* ── PAGES ───────────────────────────────────────── */
+.page{display:none;flex:1;overflow:hidden}
+.page.on{display:flex;flex-direction:column}
+
+/* ── EXPLORE ─────────────────────────────────────── */
+#page-explore{overflow:hidden}
+
+.filter-bar{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  padding:8px 14px;
+  border-bottom:1px solid var(--line);
+  overflow-x:auto;
+  flex-shrink:0;
+}
+.filter-bar::-webkit-scrollbar{display:none}
+
+.ft{
+  background:none;
+  border:1px solid transparent;
+  color:var(--muted);
+  font-family:var(--font-sans);
+  font-size:12px;
+  font-weight:500;
+  padding:3px 10px;
+  border-radius:20px;
+  cursor:pointer;
+  white-space:nowrap;
+  transition:color .12s,border-color .12s,background .12s;
+}
+.ft:hover{color:var(--text);border-color:var(--line2)}
+.ft.on{color:var(--text);border-color:var(--line2);background:var(--active)}
+
+.count-bar{
+  padding:6px 14px;
+  font-family:var(--font-mono);
+  font-size:11px;
+  color:var(--muted);
+  border-bottom:1px solid var(--line);
+  flex-shrink:0;
+}
+
+.game-grid-wrap{overflow-y:auto;flex:1;padding:10px 10px 20px}
+.game-grid-wrap::-webkit-scrollbar{width:4px}
+.game-grid-wrap::-webkit-scrollbar-track{background:transparent}
+.game-grid-wrap::-webkit-scrollbar-thumb{background:var(--line2);border-radius:2px}
+
+.game-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+  gap:1px;
+  background:var(--line);
+  border:1px solid var(--line);
+  border-radius:8px;
+  overflow:hidden;
+}
+
+.gc{
+  background:var(--bg);
+  padding:14px 14px 12px;
+  cursor:pointer;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  gap:18px;
+  transition:background .1s;
+  min-height:80px;
+}
+.gc:hover{background:var(--hover)}
+.gc:active{background:var(--active)}
+
+.gc-name{
+  font-size:13px;
+  font-weight:500;
+  color:var(--text);
+  line-height:1.3;
+}
+
+.gc-meta{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.gc-tag{
+  font-family:var(--font-mono);
+  font-size:10px;
+  color:var(--muted2);
+}
+
+.gc-arrow{
+  font-size:12px;
+  color:var(--muted2);
+  transition:transform .15s,color .15s;
+}
+.gc:hover .gc-arrow{transform:translateX(2px);color:var(--muted)}
+
+/* ── GAME VIEW ───────────────────────────────────── */
+#page-game{flex-direction:column}
+
+.game-bar{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:0 14px;
+  height:44px;
+  min-height:44px;
+  border-bottom:1px solid var(--line);
+  flex-shrink:0;
+}
+
+#gv-title{
+  font-size:13px;
+  font-weight:600;
+  color:var(--text);
+}
+
+.gv-slash{color:var(--muted2);font-size:13px;margin:0 2px}
+
+.game-bar-right{
+  margin-left:auto;
+  display:flex;
+  gap:6px;
+}
+
+.act-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  height:28px;
+  padding:0 12px;
+  border-radius:6px;
+  font-family:var(--font-sans);
+  font-size:12px;
+  font-weight:500;
+  cursor:pointer;
+  transition:background .12s,border-color .12s;
+  border:1px solid var(--line2);
+  background:var(--bg2);
+  color:var(--text);
+}
+.act-btn:hover{background:var(--active)}
+
+.act-btn.primary{
+  background:var(--text);
+  color:var(--bg);
+  border-color:var(--text);
+}
+.act-btn.primary:hover{opacity:.85}
+
+.game-holder{
+  flex:1;
+  position:relative;
+  background:#000;
+  overflow:hidden;
+}
+
+.game-holder:fullscreen{
+  width:100vw!important;
+  height:100vh!important;
+}
+
+nex-game{display:block;width:100%;height:100%}
+
+.loader{
+  position:absolute;
+  inset:0;
+  background:var(--bg);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:16px;
+  z-index:10;
+  transition:opacity .25s,visibility .25s;
+}
+.loader.gone{opacity:0;visibility:hidden}
+
+.loader-track{
+  width:160px;
+  height:1px;
+  background:var(--line2);
+}
+.loader-fill{
+  height:100%;
+  width:0%;
+  background:var(--text);
+  transition:width .1s linear;
+}
+.loader-label{
+  font-family:var(--font-mono);
+  font-size:11px;
+  color:var(--muted);
+}
+
+.empty{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  flex:1;
+  color:var(--muted);
+}
+.empty p{font-size:13px}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-seg">
+    <button id="n-explore" class="nb on" onclick="go('explore')">Explore</button>
+    <button id="n-game" class="nb" onclick="go('game')">Playing</button>
+  </div>
+  <div class="nav-sep"></div>
+  <div class="nav-search">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input id="search" placeholder="Search…" autocomplete="off" spellcheck="false">
+  </div>
+  <div class="nav-right" id="nav-count"></div>
+</nav>
+
+<!-- EXPLORE -->
+<div id="page-explore" class="page on">
+  <div class="filter-bar" id="filter-bar">
+    <button class="ft on" data-f="all">All</button>
+    <button class="ft" data-f="action">Action</button>
+    <button class="ft" data-f="casual">Casual</button>
+    <button class="ft" data-f="sports">Sports</button>
+    <button class="ft" data-f="io">IO</button>
+    <button class="ft" data-f="puzzle">Puzzle</button>
+    <button class="ft" data-f="horror">Horror</button>
+    <button class="ft" data-f="driving">Driving</button>
+    <button class="ft" data-f="tower">Tower Def</button>
+  </div>
+  <div class="count-bar" id="count-bar"></div>
+  <div class="game-grid-wrap">
+    <div id="game-grid" class="game-grid"></div>
+  </div>
+</div>
+
+<!-- GAME VIEW -->
+<div id="page-game" class="page">
+  <div id="gv-bar" class="game-bar" style="display:none">
+    <span style="font-size:12px;color:var(--muted);font-family:var(--font-mono)">arcade</span>
+    <span class="gv-slash">/</span>
+    <span id="gv-title">—</span>
+    <div class="game-bar-right">
+      <button class="act-btn" onclick="go('explore')">← Back</button>
+      <button class="act-btn primary" onclick="fs()">Fullscreen</button>
+    </div>
+  </div>
+
+  <div id="gv-empty" class="empty">
+    <p>No game selected — pick one from Explore.</p>
+    <button class="act-btn" onclick="go('explore')">Browse</button>
+  </div>
+
+  <div class="game-holder" id="game-holder" style="display:none">
+    <div class="loader" id="loader">
+      <div class="loader-track"><div class="loader-fill" id="lfill"></div></div>
+      <div class="loader-label" id="lstatus">loading</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const GAMES = [
+  "1-on-1-soccer","1-on-1-tennis","10-minutes-till-dawn","12-minibattles","2048-cupcakes",
+  "2048","3d-flight-simulator","8-ball-classic","agar.io-lite","age-of-war-2","age-of-war",
+  "ages-of-conflict","angry-birds-showdown","angry-birds-space","angry-birds","awesome-tanks-2",
+  "awesome-tanks","backrooms","bacon-may-die","bad-ice-cream-2","bad-ice-cream-3","bad-ice-cream",
+  "bad-piggies","baldis-basics","baseball-bros","basket-bros","basket-random","basketball-legends",
+  "basketball-stars","bit-planes","bitlife","blocky-snakes","bloons-td-2","bloons-td-3",
+  "bloons-td-4","bloons-td-5","bloons-td","bloxorz","blumgi-racers","blumgi-rocket",
+  "bob-the-robber-2","bob-the-robber-5","bob-the-robber","bouncy-motors","bow-masters",
+  "boxing-random","breaking-the-bank","bubble-shooter","candy-crush","capybara-clicker",
+  "car-drawing","chess","choppy-orc","circloo-2","circloo","clash-of-vikings","cleanup.io",
+  "cluster-rush","cookie-clicker","crazy-cars","crazy-cattle-3d","crazy-crash-landing",
+  "crazy-motorcycle","crossy-road","cut-the-rope","dadish-2","dadish-3","dadish","death-chase",
+  "death-run-3d","demolition-derby-crash-racing","doodle-jump","draw-climber","dreadhead-parkour",
+  "drift-boss","drive-mad","duck-life-2","duck-life-3","duck-life-4","duck-life-5","duck-life",
+  "ducklings.io","eagle-ride","eaglercraft-1.12","eaglercraft-1.5","eaglercraft-1.8",
+  "earn-to-die-2","earn-to-die","eggy-car","elastic-face","fnaf","fnaf-2","fnaf-3","fnaf-4",
+  "race-survival-arena-king-full","rooftop-snipers-2","snow-rider-3d","escaping-the-prison",
+  "escape-road","escape-road-2","the-fancy-pants-adventures-world-1",
+  "the-fancy-pants-adventures-world-2","fireboy-and-watergirl","fireboy-and-watergirl-2",
+  "fireboy-and-watergirl-3","fireboy-and-watergirl-4","evil-glitch","fruit-ninja",
+  "football-bros","football-legends","the-flood-runner-4","the-flood-runner-3",
+  "the-flood-runner-2","flappy-bird","a-dark-room","slope","volley-random","polytrack",
+  "space-waves","1v1.lol","a-dance-of-fire-and-ice","among-us","buildnow.gg"
+];
+
+const TAGS = {
+  action:['war','battle','combat','fight','shoot','bacon','sniper','run','cluster','dreadhead','angry','evil'],
+  casual:['clicker','click','2048','cookie','bubble','candy','capybara','draw','flappy','doodle','cut','idle','bitlife'],
+  sports:['soccer','tennis','football','basketball','baseball','basket','boxing','volley','golf'],
+  io:['agar','cleanup','ducklings','1v1','buildnow','among'],
+  puzzle:['bloxorz','chess','circloo','fireboy','watergirl','bob','escape','prison','dark-room','cupcakes','cut'],
+  horror:['fnaf','backrooms','evil','baldi'],
+  driving:['car','drive','drift','crash','racing','death-chase','death-run','motorcycle','eggy','snow-rider','earn'],
+  tower:['bloons','tower','awesome-tanks']
+};
+
+function fmt(s){return s.split('-').map(w=>w[0].toUpperCase()+w.slice(1)).join(' ')}
+
+function tag(alias){
+  for(const[k,words]of Object.entries(TAGS))if(words.some(w=>alias.includes(w)))return k;
+  return '';
+}
+
+let filter='all';
+
+document.getElementById('filter-bar').addEventListener('click',e=>{
+  const btn=e.target.closest('.ft');if(!btn)return;
+  document.querySelectorAll('.ft').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  filter=btn.dataset.f;
+  render();
+});
+
+document.getElementById('search').addEventListener('input',render);
+
+function render(){
+  const q=document.getElementById('search').value.toLowerCase();
+  const grid=document.getElementById('game-grid');
+  grid.innerHTML='';
+  let n=0;
+  GAMES.forEach(alias=>{
+    const name=fmt(alias);
+    const t=tag(alias);
+    if(filter!=='all'&&t!==filter)return;
+    if(q&&!name.toLowerCase().includes(q)&&!alias.includes(q))return;
+    n++;
+    const c=document.createElement('div');
+    c.className='gc';
+    c.innerHTML=`<div class="gc-name">${name}</div><div class="gc-meta"><span class="gc-tag">${t||'—'}</span><span class="gc-arrow">→</span></div>`;
+    c.onclick=()=>launch(alias);
+    grid.appendChild(c);
+  });
+  document.getElementById('count-bar').textContent=`${n} / ${GAMES.length}`;
+  document.getElementById('nav-count').textContent=`${GAMES.length}`;
+}
+
+function go(page){
+  document.getElementById('n-explore').classList.toggle('on',page==='explore');
+  document.getElementById('n-game').classList.toggle('on',page==='game');
+  document.getElementById('page-explore').classList.toggle('on',page==='explore');
+  document.getElementById('page-game').classList.toggle('on',page==='game');
+}
+
+function launch(alias){
+  const holder=document.getElementById('game-holder');
+  const loader=document.getElementById('loader');
+  const lfill=document.getElementById('lfill');
+  const lstatus=document.getElementById('lstatus');
+
+  lfill.style.width='0%';
+  lstatus.textContent='loading';
+  loader.classList.remove('gone');
+
+  holder.querySelectorAll('nex-game').forEach(e=>e.remove());
+  document.getElementById('gv-title').textContent=fmt(alias);
+  document.getElementById('gv-bar').style.display='flex';
+  document.getElementById('gv-empty').style.display='none';
+  holder.style.display='block';
+
+  const el=document.createElement('nex-game');
+  el.setAttribute('alias',alias);
+  el.setAttribute('gid','g');
+
+  if(window.nex&&nex.g){
+    nex.g.on('progress',e=>{
+      if(e&&e.progress!=null){lfill.style.width=e.progress+'%';lstatus.textContent=e.progress+'%'}
+    });
+    nex.g.on('ready',()=>{lstatus.textContent='ready';setTimeout(()=>loader.classList.add('gone'),150)});
+    nex.g.on('error',e=>{lstatus.textContent='error'+(e.message?' — '+e.message:'')});
+  }
+
+  holder.appendChild(el);
+  go('game');
+  if(window.nex&&nex.g&&nex.g.start)nex.g.start();
+}
+
+function fs(){
+  const h=document.getElementById('game-holder');
+  if(!document.fullscreenElement)(h.requestFullscreen||h.webkitRequestFullscreen).call(h);
+  else document.exitFullscreen&&document.exitFullscreen();
+}
+
+render();
+</script>
+</body>
+</html>
