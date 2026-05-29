@@ -37,10 +37,10 @@
             font-size: 15px;
             margin-bottom: 36px;
           }
-          #g_id_onload, .g_id_signin {
+          #google-btn-container {
             display: flex;
             justify-content: center;
-            margin: 10px 0;
+            margin: 20px 0;
           }
           .info {
             margin-top: 32px;
@@ -57,19 +57,8 @@
           <h1>🎮 ARCADE</h1>
           <div class="sub">300+ unblocked games • instant play</div>
           
-          <div id="g_id_onload"
-               data-client_id="124658869788-55e9cll1e7d9ge3v1g8lgejhfr61teur.apps.googleusercontent.com"
-               data-callback="handleLogin"
-               data-auto_prompt="false">
-          </div>
-          <div class="g_id_signin"
-               data-type="standard"
-               data-shape="rectangular"
-               data-theme="filled_black"
-               data-text="signin_with"
-               data-size="large"
-               data-logo_alignment="left">
-          </div>
+          <!-- Container waar de Google knop in komt -->
+          <div id="google-btn-container"></div>
           
           <div class="info">
             ✅ Login with your SCHOOL Google account
@@ -78,20 +67,56 @@
         
         <script src="https://accounts.google.com/gsi/client"></script>
         <script>
-          window.handleLogin = function(response) {
-            var payload = JSON.parse(atob(response.credential.split('.')[1]));
-            var email = payload.email;
-            var name = payload.name || email.split('@')[0];
+          // Wacht tot de pagina volledig geladen is
+          window.onload = function() {
+            // Initialiseer Google Identity Services
+            google.accounts.id.initialize({
+              client_id: '124658869788-55e9cll1e7d9ge3v1g8lgejhfr61teur.apps.googleusercontent.com',
+              callback: handleLogin,
+              auto_select: false,
+              cancel_on_tap_outside: true
+            });
             
-            alert("Welcome " + name + "!\nEmail: " + email);
+            // Render de knop in de container
+            google.accounts.id.renderButton(
+              document.getElementById('google-btn-container'),
+              {
+                type: 'standard',
+                shape: 'rectangular',
+                theme: 'filled_black',
+                text: 'signin_with',
+                size: 'large',
+                logo_alignment: 'left',
+                width: 250
+              }
+            );
             
-            // Save user info
-            localStorage.setItem('user_email', email);
-            localStorage.setItem('user_name', name);
-            
-            // Redirect to your game hub (change this URL!)
-            // window.location.href = "https://your-game-hub-url.com";
+            // Optioneel: prompt weergeven (alleen als de gebruiker al eerder heeft ingelogd)
+            // google.accounts.id.prompt();
           };
+          
+          // Callback functie voor succesvolle login
+          function handleLogin(response) {
+            try {
+              var payload = JSON.parse(atob(response.credential.split('.')[1]));
+              var email = payload.email;
+              var name = payload.name || email.split('@')[0];
+              
+              alert("Welcome " + name + "!\nEmail: " + email);
+              
+              // Sla gebruiker op in localStorage
+              localStorage.setItem('arcade_user_email', email);
+              localStorage.setItem('arcade_user_name', name);
+              localStorage.setItem('arcade_user_pic', payload.picture || '');
+              
+              // Stuur door naar je game hub (verander deze URL!)
+              // window.location.href = "https://jouw-game-hub.nl";
+              
+            } catch (err) {
+              console.error("Login error:", err);
+              alert("Login mislukt. Probeer opnieuw.");
+            }
+          }
         </script>
       </body>
     </html>
