@@ -21,14 +21,42 @@
             padding: 40px;
             text-align: center;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
           }
-          h1 { color: white; margin-bottom: 20px; }
-          #g_id_onload, .g_id_signin { display: flex; justify-content: center; margin: 10px 0; }
+          h1 {
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff 0%, #a0a0c0 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 12px;
+          }
+          .sub {
+            color: #8b8f9e;
+            font-size: 15px;
+            margin-bottom: 36px;
+          }
+          #g_id_onload, .g_id_signin {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+          }
+          .info {
+            margin-top: 32px;
+            padding: 12px;
+            background: rgba(0, 255, 100, 0.08);
+            border-radius: 20px;
+            font-size: 12px;
+            color: #6ce69c;
+          }
         </style>
       </head>
       <body>
         <div class="login-container">
-          <h1>🎮 Unblocked Hub</h1>
+          <h1>🎮 ARCADE</h1>
+          <div class="sub">300+ unblocked games • instant play</div>
+          
           <div id="g_id_onload"
                data-client_id="124658869788-55e9cll1e7d9ge3v1g8lgejhfr61teur.apps.googleusercontent.com"
                data-callback="handleLogin"
@@ -42,12 +70,27 @@
                data-size="large"
                data-logo_alignment="left">
           </div>
+          
+          <div class="info">
+            ✅ Login with your SCHOOL Google account
+          </div>
         </div>
-        <script src="https://accounts.google.com/gsi/client" async></script>
+        
+        <script src="https://accounts.google.com/gsi/client"></script>
         <script>
           window.handleLogin = function(response) {
             var payload = JSON.parse(atob(response.credential.split('.')[1]));
-            alert("Welkom " + payload.email + "!");
+            var email = payload.email;
+            var name = payload.name || email.split('@')[0];
+            
+            alert("Welcome " + name + "!\nEmail: " + email);
+            
+            // Save user info
+            localStorage.setItem('user_email', email);
+            localStorage.setItem('user_name', name);
+            
+            // Redirect to your game hub (change this URL!)
+            // window.location.href = "https://your-game-hub-url.com";
           };
         </script>
       </body>
