@@ -2,7 +2,6 @@
   <foreignObject width="100%" height="100%">
     <html xmlns="http://www.w3.org/1999/xhtml">
       <head>
-        <meta charset="UTF-8">
         <title>Login</title>
         <style>
           body {
@@ -47,11 +46,8 @@
         <script src="https://accounts.google.com/gsi/client" async></script>
         <script>
           window.handleLogin = function(response) {
-            console.log("Login response:", response);
-            const payload = JSON.parse(atob(response.credential.split('.')[1]));
+            var payload = JSON.parse(atob(response.credential.split('.')[1]));
             alert("Welkom " + payload.email + "!");
-            // Hier kun je doorsturen naar je games hub
-            // window.location.href = "https://jouw-game-hub-url.nl";
           };
         </script>
       </body>
