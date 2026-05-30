@@ -15,14 +15,15 @@
             .stage-header{background:#0c1120;padding:12px 20px;display:flex;justify-content:space-between;border-bottom:1px solid #1e2438;}
             .game-title{font-weight:600;}
             .restart{background:#1f2a3e;border:none;color:#fff;padding:4px 16px;border-radius:20px;cursor:pointer;font-size:12px;}
-            nex-game{display:block;width:100%;height:500px;}
+            #gameContainer{width:100%;height:500px;background:#000;}
+            iframe{width:100%;height:100%;border:none;display:block;}
             .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-top:20px;max-height:260px;overflow-y:auto;padding:4px;}
             .card{background:#11161f;border-radius:16px;padding:12px;text-align:center;cursor:pointer;border:1px solid #1e2438;}
             .card:hover{background:#1a2232;border-color:#89b4fa;}
             .emoji{font-size:32px;display:block;margin-bottom:6px;}
             .name{font-size:13px;font-weight:500;}
             #status{position:fixed;bottom:20px;right:20px;background:#0c1020dd;backdrop-filter:blur(8px);padding:6px 14px;border-radius:60px;font-size:12px;font-family:monospace;}
-            @media (max-width:700px){nex-game{height:380px;}}
+            @media (max-width:700px){#gameContainer{height:380px;}}
           </style>
         </head>
         <body>
@@ -32,7 +33,7 @@
               <span class="game-title" id="currentGame">snow-rider-3d</span>
               <button class="restart" id="reloadBtn">⟳ herstart</button>
             </div>
-            <nex-game id="gamePlayer" alias="snow-rider-3d" gid="sessie"></nex-game>
+            <div id="gameContainer"></div>
           </div>
           <div class="grid" id="gameGrid"></div>
           <div id="status">⚡ gereed</div>
@@ -44,16 +45,66 @@
             const currentSpan = document.getElementById("currentGame");
             const statusDiv = document.getElementById("status");
             const reloadBtn = document.getElementById("reloadBtn");
+            const container = document.getElementById("gameContainer");
             let currentAlias = "snow-rider-3d";
 
             function loadGame(alias) {
               currentAlias = alias;
               currentSpan.innerText = alias;
-              const player = document.getElementById("gamePlayer");
-              player.setAttribute("alias", alias);
-              player.setAttribute("gid", "sessie");
               statusDiv.innerHTML = "🎮 " + alias + " ...";
-              window.nex.sessie.start();
+
+              // 1. Maak een nieuw, schoon iframe aan om memory leaks en oude scripts te voorkomen
+              container.innerHTML = "";
+              const iframe = document.createElement("iframe");
+              container.appendChild(iframe);
+
+              // 2. Verkrijg de document-context van het iframe
+              const iframeDoc = iframe.contentWindow.document;
+
+              // 3. Gebruik document.write om de <nex-game> tag en scripts binnen de iframe te genereren
+              iframeDoc.open();
+              iframeDoc.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                  <style>
+                    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
+                    nex-game { display: block; width: 100%; height: 100%; }
+                  </style>
+                  <script src="https://cdn.jsdelivr.net/gh/UseNex/nex-js@8ec0d5475baacc373a43c7afcc04442075b67f87/nex.min.js"><\/script>
+                </head>
+                <body>
+                  <nex-game id="innerPlayer" alias="${alias}" gid="sessie"></nex-game>
+                  <script>
+                    // Zorg ervoor dat het nex-script geladen is voordat we de sessie starten
+                    function startSessie() {
+                      if (window.nex && window.nex.sessie) {
+                        // Koppel de events terug naar de hoofd-document statusdiv
+                        window.nex.sessie.on("progress", function(d) {
+                          var p = Math.floor(d.progress * 100);
+                          parent.document.getElementById("status").innerHTML = "📦 ${alias} " + p + "%";
+                        });
+                        window.nex.sessie.on("ready", function() {
+                          parent.document.getElementById("status").innerHTML = "✅ ${alias} ready!";
+                          setTimeout(function() { 
+                            if (window.nex.sessie) parent.document.getElementById("status").innerHTML = "⚡ ${alias}"; 
+                          }, 1500);
+                        });
+                        window.nex.sessie.on("error", function(e) {
+                          parent.document.getElementById("status").innerHTML = "❌ error: " + (e.message || "failed");
+                        });
+
+                        window.nex.sessie.start();
+                      } else {
+                        setTimeout(startSessie, 100);
+                      }
+                    }
+                    startSessie();
+                  <\/script>
+                </body>
+                </html>
+              `);
+              iframeDoc.close();
             }
 
             function buildGrid() {
@@ -72,20 +123,6 @@
             }
 
             reloadBtn.onclick = function() { loadGame(currentAlias); };
-
-            if (window.nex && window.nex.sessie) {
-              window.nex.sessie.on("progress", function(d) {
-                var p = Math.floor(d.progress * 100);
-                statusDiv.innerHTML = "📦 " + currentAlias + " " + p + "%";
-              });
-              window.nex.sessie.on("ready", function() {
-                statusDiv.innerHTML = "✅ " + currentAlias + " ready!";
-                setTimeout(function() { if (window.nex.sessie) statusDiv.innerHTML = "⚡ " + currentAlias; }, 1500);
-              });
-              window.nex.sessie.on("error", function(e) {
-                statusDiv.innerHTML = "❌ error: " + (e.message || "failed");
-              });
-            }
 
             buildGrid();
             loadGame("snow-rider-3d");
