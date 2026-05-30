@@ -37,6 +37,7 @@
           <div class="grid" id="gameGrid"></div>
           <div id="status">⚡ gereed</div>
           <script>
+          // <![CDATA[
             const GAMES = ["snow-rider-3d","slope","1v1.lol","among-us","fnaf","cookie-clicker","fruit-ninja","subway-surfers","angry-birds","cut-the-rope","fireboy-and-watergirl","bloons-td-5","drift-boss","doodle-jump","2048","bitlife","backrooms","basketball-stars","bad-ice-cream","crossy-road","earn-to-die","flappy-bird","chess","rooftop-snipers","volley-random"];
             const emojiMap = {"snow-rider-3d":"🏔️","slope":"⛰️","1v1.lol":"🥅","among-us":"👾","fnaf":"🐻","cookie-clicker":"🍪","fruit-ninja":"🍉","fireboy-and-watergirl":"🔥💧","drift-boss":"🏎️","2048":"🔢","bitlife":"📱","backrooms":"🚪","chess":"♟️","flappy-bird":"🐦"};
             const grid = document.getElementById("gameGrid");
@@ -44,6 +45,7 @@
             const statusDiv = document.getElementById("status");
             const reloadBtn = document.getElementById("reloadBtn");
             let currentAlias = "snow-rider-3d";
+
             function loadGame(alias) {
               currentAlias = alias;
               currentSpan.innerText = alias;
@@ -53,6 +55,7 @@
               statusDiv.innerHTML = "🎮 " + alias + " ...";
               window.nex.sessie.start();
             }
+
             function buildGrid() {
               grid.innerHTML = "";
               for (let i = 0; i < GAMES.length; i++) {
@@ -67,7 +70,9 @@
                 grid.appendChild(div);
               }
             }
+
             reloadBtn.onclick = function() { loadGame(currentAlias); };
+
             if (window.nex && window.nex.sessie) {
               window.nex.sessie.on("progress", function(d) {
                 var p = Math.floor(d.progress * 100);
@@ -81,8 +86,10 @@
                 statusDiv.innerHTML = "❌ error: " + (e.message || "failed");
               });
             }
+
             buildGrid();
             loadGame("snow-rider-3d");
+          // ]]>
           </script>
         </body>
       </html>
