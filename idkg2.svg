@@ -14,86 +14,91 @@
         const baseUrl = "https://cdn.jsdelivr.net/gh/21-14-2-12-15-3-11-5-4-7-1-13-5-19/1@latest/";
         const targetUrl = baseUrl + "f1.html";
         
-        // Hulpfunctie om relatieve URL's (voor CSS/Scripts) absoluut te maken
+        const container = document.getElementById("root-container");
+
+        // Hulpfunktion om relatieve URL's absoluut te maken
         function maakAbsoluut(url) {
             if (!url) return url;
             if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) {
                 return url;
             }
-            // Haal eventuele leidende slashes weg en plak de baseUrl erachter
             return baseUrl + (url.startsWith("/") ? url.substring(1) : url);
         }
 
         fetch(targetUrl)
-            .then(response => response.text())
+            .then(response => {
+                if (!response.ok) throw new Error("Netwerkrespons was niet ok");
+                return response.text();
+            })
             .then(htmlText => {
-                const container = document.getElementById("root-container");
                 container.innerHTML = ""; // Maak de lader leeg
 
-                // 1. Parse de HTML tekst naar een echt HTML-document in het geheugen
+                // Parse de HTML tekst naar een virtueel document
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(htmlText, "text/html");
 
-                // 2. Verwerk en injecteer alle Stylesheets (<link rel="stylesheet"> en <style>)
+                // FIX: Sla de CSS en scripts op in de actieve container in plaats van document.head
+                
+                // 1. Verwerk alle Stylesheets en inline styles
                 const styles = doc.querySelectorAll("link[rel='stylesheet'], style");
                 styles.forEach(styleTag => {
                     if (styleTag.tagName.toLowerCase() === "link") {
                         const newLink = document.createElement("link");
                         newLink.rel = "stylesheet";
                         newLink.href = maakAbsoluut(styleTag.getAttribute("href"));
-                        document.head.appendChild(newLink);
+                        container.appendChild(newLink); // Veilig in container injecteren
                     } else {
                         const newStyle = document.createElement("style");
                         newStyle.textContent = styleTag.textContent;
-                        document.head.appendChild(newStyle);
+                        container.appendChild(newStyle); // Veilig in container injecteren
                     }
                 });
 
-                // 3. Injecteer de body-content (nodig voor de DOM-structuur waar Shadow DOMs zich aan hechten)
-                container.innerHTML = doc.body.innerHTML;
+                // 2. Injecteer de body-content van de externe pagina
+                const bodyContent = document.createElement("div");
+                bodyContent.innerHTML = doc.body.innerHTML;
+                container.appendChild(bodyContent);
 
-                // 4. Verzamel en bereid alle scripts voor (zowel inline als extern)
+                // 3. Verzamel alle scripts
                 const scriptElements = doc.querySelectorAll("script");
                 const scriptList = Array.from(scriptElements);
 
-                // 5. Voer alle scripts synchroon achter elkaar uit (simuleert document.write verwerking)
+                // 4. Voer alle scripts synchroon achter elkaar uit (simuleert document.write)
                 function laadScriptInVolgorde(index) {
-                    if (index >= scriptList.length) return; // Alle scripts zijn uitgevoerd!
+                    if (index >= scriptList.length) return; // Klaar!
 
                     const oudScript = scriptList[index];
                     const nieuwScript = document.createElement("script");
 
-                    // Kopieer alle attributen naar het nieuwe script element
+                    // Kopieer attributen
                     Array.from(oudScript.attributes).forEach(attr => {
                         nieuwScript.setAttribute(attr.name, attr.value);
                     });
 
                     if (oudScript.src) {
-                        // Fix het pad naar de externe jsDelivr server voor externe scripts
                         const srcUrl = maakAbsoluut(oudScript.getAttribute("src"));
                         nieuwScript.src = srcUrl;
 
-                        // Wacht tot het externe script VOLLEDIG is geladen en uitgevoerd (cruciaal voor Shadow DOM opbouw)
+                        // Wacht tot extern script volledig is ingeladen
                         nieuwScript.onload = () => laadScriptInVolgorde(index + 1);
                         nieuwScript.onerror = () => {
-                            console.error("Kon extern script niet laden: " + srcUrl);
+                            console.error("Fout bij laden script: " + srcUrl);
                             laadScriptInVolgorde(index + 1);
                         };
-                        document.head.appendChild(nieuwScript);
+                        container.appendChild(nieuwScript); // Veilig in container injecteren
                     } else {
-                        // Inline script (zoals inline Shadow DOM initialisaties): direct uitvoeren
+                        // Inline script direct uitvoeren
                         nieuwScript.textContent = oudScript.textContent;
-                        document.head.appendChild(nieuwScript);
-                        // Direct door naar de volgende omdat inline scripts direct uitvoeren
+                        container.appendChild(nieuwScript); // Veilig in container injecteren
                         laadScriptInVolgorde(index + 1);
                     }
                 }
 
-                // Start de executie van de scripts
+                // Start script-keten
                 laadScriptInVolgorde(0);
             })
             .catch(err => {
-                document.getElementById("root-container").innerHTML = "<p style='color:red;'>Laadfout: " + err + "</p>";
+                container.innerHTML = "<p style='color:red; padding:20px;'>Laadfout: " + err.message + "</p>";
             });
     });
     ]]>
