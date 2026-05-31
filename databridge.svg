@@ -1,0 +1,56 @@
+<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%; margin:0; padding:0; overflow:hidden;">
+  <style>
+    html, body, svg {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background-color: #111111;
+    }
+  </style>
+
+  <rect width="100%" height="100%" fill="#111111" />
+
+  <foreignObject x="0" y="0" width="100%" height="100%">
+    <div xmlns="http://www.w3.org/1999/xhtml" id="bridge-container" style="width:100%; height:100%; margin:0; padding:0; overflow:hidden;">
+      <p style="font-family:sans-serif; color:white; padding:20px; margin:0;">Data Bridge Actief...</p>
+    </div>
+  </foreignObject>
+
+  <script type="text/javascript">
+    <![CDATA[
+    document.addEventListener("DOMContentLoaded", function() {
+        // Luister naar berichten van de hoofdwebsite
+        window.addEventListener("message", function(event) {
+            // Optioneel: Voeg hier een controle toe voor event.origin als je specifieke domeinen wilt white-listen
+            
+            const data = event.data;
+
+            if (data.action === "write") {
+                try {
+                    localStorage.setItem(data.key, JSON.stringify(data.value));
+                    event.source.postMessage({ status: "success", key: data.key }, event.origin);
+                } catch (e) {
+                    event.source.postMessage({ status: "error", message: e.message }, event.origin);
+                }
+            }
+
+            if (data.action === "read") {
+                try {
+                    const value = JSON.parse(localStorage.getItem(data.key));
+                    event.source.postMessage({ status: "read_result", key: data.key, value: value }, event.origin);
+                } catch (e) {
+                    event.source.postMessage({ status: "error", message: e.message }, event.origin);
+                }
+            }
+        });
+
+        // Meld aan de parent dat de bridge klaar is voor gebruik
+        if (window.parent) {
+            window.parent.postMessage({ status: "bridge_ready" }, "*");
+        }
+    });
+    ]]>
+  </script>
+</svg>
