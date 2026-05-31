@@ -1,0 +1,50 @@
+<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%; margin:0; padding:0; overflow:hidden;">
+  <style>
+    html, body, svg { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #111111; }
+  </style>
+  <rect width="100%" height="100%" fill="#111111" />
+  <foreignObject x="0" y="0" width="100%" height="100%">
+    <div xmlns="http://www.w3.org/1999/xhtml" id="bridge-container" style="width:100%; height:100%; margin:0; padding:0; overflow:hidden;">
+      <p style="font-family:sans-serif; color:white; padding:20px; margin:0;">Data Bridge Active...</p>
+    </div>
+  </foreignObject>
+  <script type="text/javascript">
+    <![CDATA[
+    document.addEventListener("DOMContentLoaded", function() {
+        let db;
+        const req = indexedDB.open("CloudBridgeDB", 1);
+        req.onupgradeneeded = e => e.target.result.createObjectStore("store");
+        req.onsuccess = e => {
+            db = e.target.result;
+            if (window.parent) window.parent.postMessage({ status: "bridge_ready" }, "*");
+        };
+
+        window.addEventListener("message", async function(event) {
+            const data = event.data;
+            if (!db || !data || !data.action) return;
+
+            const res = (action, success, payload = {}) => {
+                event.source.postMessage({ status: success ? "success" : "error", action, key: data.key, ...payload }, event.origin);
+            };
+
+            try {
+                if (data.action === "write") {
+                    const tx = db.transaction("store", "readwrite");
+                    tx.objectStore("store").put(data.value, data.key);
+                    tx.oncomplete = () => res("write", true);
+                    tx.onerror = () => res("write", false, { message: tx.error.message });
+                }
+                if (data.action === "read") {
+                    const tx = db.transaction("store", "readonly");
+                    const getReq = tx.objectStore("store").get(data.key);
+                    getReq.onsuccess = () => event.source.postMessage({ status: "read_result", key: data.key, value: getReq.result }, event.origin);
+                    getReq.onerror = () => res("read", false, { message: getReq.error.message });
+                }
+            } catch (e) {
+                res(data.action, false, { message: e.message });
+            }
+        });
+    });
+    ]]>
+  </script>
+</svg>
