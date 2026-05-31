@@ -1,0 +1,101 @@
+<svg width="100%" height="100%" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+  
+  <rect x="0" y="0" width="800" height="600" fill="#ffffff" />
+
+  <foreignObject x="0" y="0" width="800" height="600">
+    <div xmlns="http://www.w3.org/1999/xhtml" id="root-container" style="width:100%; height:100%; overflow:auto; margin:0; padding:0;">
+      <p>Pagina, externe CSS en Shadow-DOM scripts laden...</p>
+    </div>
+  </foreignObject>
+
+  <script type="text/javascript">
+    <![CDATA[
+    document.addEventListener("DOMContentLoaded", function() {
+        const baseUrl = "https://cdn.jsdelivr.net/gh/21-14-2-12-15-3-11-5-4-7-1-13-5-19/1@latest/";
+        const targetUrl = baseUrl + "f1.html";
+        
+        // Hulpfunctie om relatieve URL's (voor CSS/Scripts) absoluut te maken
+        function maakAbsoluut(url) {
+            if (!url) return url;
+            if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) {
+                return url;
+            }
+            // Haal eventuele leidende slashes weg en plak de baseUrl erachter
+            return baseUrl + (url.startsWith("/") ? url.substring(1) : url);
+        }
+
+        fetch(targetUrl)
+            .then(response => response.text())
+            .then(htmlText => {
+                const container = document.getElementById("root-container");
+                container.innerHTML = ""; // Maak de lader leeg
+
+                // 1. Parse de HTML tekst naar een echt HTML-document in het geheugen
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlText, "text/html");
+
+                // 2. Verwerk en injecteer alle Stylesheets (<link rel="stylesheet"> en <style>)
+                const styles = doc.querySelectorAll("link[rel='stylesheet'], style");
+                styles.forEach(styleTag => {
+                    if (styleTag.tagName.toLowerCase() === "link") {
+                        const newLink = document.createElement("link");
+                        newLink.rel = "stylesheet";
+                        newLink.href = maakAbsoluut(styleTag.getAttribute("href"));
+                        document.head.appendChild(newLink);
+                    } else {
+                        const newStyle = document.createElement("style");
+                        newStyle.textContent = styleTag.textContent;
+                        document.head.appendChild(newStyle);
+                    }
+                });
+
+                // 3. Injecteer de body-content (nodig voor de DOM-structuur waar Shadow DOMs zich aan hechten)
+                container.innerHTML = doc.body.innerHTML;
+
+                // 4. Verzamel en bereid alle scripts voor (zowel inline als extern)
+                const scriptElements = doc.querySelectorAll("script");
+                const scriptList = Array.from(scriptElements);
+
+                // 5. Voer alle scripts synchroon achter elkaar uit (simuleert document.write verwerking)
+                function laadScriptInVolgorde(index) {
+                    if (index >= scriptList.length) return; // Alle scripts zijn uitgevoerd!
+
+                    const oudScript = scriptList[index];
+                    const nieuwScript = document.createElement("script");
+
+                    // Kopieer alle attributen naar het nieuwe script element
+                    Array.from(oudScript.attributes).forEach(attr => {
+                        nieuwScript.setAttribute(attr.name, attr.value);
+                    });
+
+                    if (oudScript.src) {
+                        // Fix het pad naar de externe jsDelivr server voor externe scripts
+                        const srcUrl = maakAbsoluut(oudScript.getAttribute("src"));
+                        nieuwScript.src = srcUrl;
+
+                        // Wacht tot het externe script VOLLEDIG is geladen en uitgevoerd (cruciaal voor Shadow DOM opbouw)
+                        nieuwScript.onload = () => laadScriptInVolgorde(index + 1);
+                        nieuwScript.onerror = () => {
+                            console.error("Kon extern script niet laden: " + srcUrl);
+                            laadScriptInVolgorde(index + 1);
+                        };
+                        document.head.appendChild(nieuwScript);
+                    } else {
+                        // Inline script (zoals inline Shadow DOM initialisaties): direct uitvoeren
+                        nieuwScript.textContent = oudScript.textContent;
+                        document.head.appendChild(nieuwScript);
+                        // Direct door naar de volgende omdat inline scripts direct uitvoeren
+                        laadScriptInVolgorde(index + 1);
+                    }
+                }
+
+                // Start de executie van de scripts
+                laadScriptInVolgorde(0);
+            })
+            .catch(err => {
+                document.getElementById("root-container").innerHTML = "<p style='color:red;'>Laadfout: " + err + "</p>";
+            });
+    });
+    ]]>
+  </script>
+</svg>
