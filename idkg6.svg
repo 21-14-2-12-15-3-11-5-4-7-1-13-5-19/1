@@ -1,6 +1,6 @@
-<svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%; margin:0; padding:0; overflow:hidden;">
   <style>
-    /* Zorg ervoor dat er geen onnodige witruimtes of scrollbalken rondom de SVG ontstaan */
+    /* Zorg voor een strakke zwarte achtergrond zonder scrollbalken */
     html, body, svg {
         margin: 0;
         padding: 0;
@@ -11,11 +11,11 @@
     }
   </style>
 
-  <rect x="0" y="0" width="100%" height="100%" fill="#111111" />
+  <rect width="100%" height="100%" fill="#111111" />
 
   <foreignObject x="0" y="0" width="100%" height="100%">
     <div xmlns="http://www.w3.org/1999/xhtml" id="flash-container" style="width:100%; height:100%; margin:0; padding:0; overflow:hidden;">
-      <p style="font-family:sans-serif; color:white; padding:20px; margin:0;">Flash-game initialiseren op volledig scherm...</p>
+      <p style="font-family:sans-serif; color:white; padding:20px; margin:0;">Flash-game laden...</p>
     </div>
   </foreignObject>
 
@@ -32,7 +32,6 @@
                 return response.text();
             })
             .then(htmlText => {
-                // Injecteer de base-tag direct achter de <head> voor Ruffle
                 const baseTag = `<base href="${baseUrl}">`;
                 let aangepasteHtml = htmlText;
                 
@@ -44,11 +43,10 @@
                     aangepasteHtml = baseTag + htmlText;
                 }
 
-                // Maak het iframe aan dat de hele pagina vult
                 container.innerHTML = "";
                 const iframe = document.createElementNS("http://www.w3.org/1999/xhtml", "iframe");
                 
-                // Styling om het iframe volledig vullend te maken zonder randen
+                // display:block en 100% zorgt dat het iframe de natuurlijke verhoudingen van de HTML/Ruffle-pagina respecteert
                 iframe.setAttribute("style", "width:100%; height:100%; border:none; margin:0; padding:0; background:#111; display:block;");
                 iframe.srcdoc = aangepasteHtml;
                 
